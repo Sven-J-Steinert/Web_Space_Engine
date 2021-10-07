@@ -1,0 +1,13 @@
+# Python cache files
+build/
+dist/
+*.egg-info/
+*.egg
+*.py[cod]
+__pycache__/
+*.so
+*~
+
+# Python virtual environment
+venv/
+*.bat

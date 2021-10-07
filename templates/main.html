@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <script type="text/javascript" src="{{url_for('static', filename='js/brython.js')}}"></script>
+        <script type="text/javascript" src="{{url_for('static', filename='js/brython_stdlib.js')}}"></script>
+        <script type="text/python" src="{{url_for('static', filename='code/main.py')}}"></script>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    </head>
+    <body onload="brython({debug:1, pythonpath:['static/code']})">
+
+
+        <div class="btn-group">
+            <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Time</button>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenu">
+                <button id="btn_time_faster" class="dropdown-item" type="button">10x Faster</button>
+                <button id="btn_time_slower" class="dropdown-item" type="button">10x Slower</button>
+                <button id="btn_time_freeze" class="dropdown-item" type="button">Freeze</button>
+                <button id="btn_time_forward" class="dropdown-item" type="button">Play Forward</button>
+                <button id="btn_time_backward" class="dropdown-item" type="button">Play Backward</button>
+                <button id="btn_time_set" class="dropdown-item" type="button">Set Time</button>
+                <div class="dropdown-divider"></div>
+                <button id="btn_time_realtime" class="dropdown-item" type="button">Real Time</button>
+            </div>
+        </div>
+
+
+        <div class="btn-group">
+            <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Options</button>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenu">
+                <button id="btn_show_orbits" class="dropdown-item" type="button">Show Orbits</button>
+                <button id="btn_show_ecliptic" class="dropdown-item" type="button">Show Ecliptic</button>
+            </div>
+        </div>
+
+
+        <div class="btn-group">
+            <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Celestial</button>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenu">
+                <button id="btn_goto_sun" class="dropdown-item" type="button">Sun</button>
+                <div class="dropdown-divider"></div>
+                <button id="btn_goto_mercury" class="dropdown-item" type="button">Mercury</button>
+                <button id="btn_goto_venus" class="dropdown-item" type="button">Venus</button>
+                <button id="btn_goto_earth" class="dropdown-item" type="button">Earth</button>
+                <button id="btn_goto_moon" class="dropdown-item" type="button">Moon</button>
+                <button id="btn_goto_mars" class="dropdown-item" type="button">Mars</button>
+                <button id="btn_goto_jupiter" class="dropdown-item" type="button">Jupiter</button>
+            </div>
+        </div>
+
+
+        <div class="btn-group">
+            <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Objects</button>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenu">
+                <button id="btn_goto_sat" class="dropdown-item" type="button">Satellite</button>
+            </div>
+        </div>
+
+    <button id="btn_change_axes" class="btn btn-primary btn-sm">Change Axes</button>
+
+    <button id="display_time" class="btn btn-primary btn-sm"></button>
+
+
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+  </body>
+</html>
