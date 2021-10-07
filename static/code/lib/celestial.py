@@ -47,7 +47,7 @@ class CelestialObject:
         self.sprite = three.Sprite(three.SpriteMaterial({
             'map': three.TextureLoader().load("static/img/sprite.png"),
             'sizeAttenuation': False}))
-        self.sprite.scale.set(0.01, 0.01)
+        self.sprite.scale.set(0.04, 0.04)
         self.sprite.visible = False
         self.scene.scene.add(self.sprite)
 
@@ -78,7 +78,7 @@ class CelestialObject:
         self.scene.camera.camera.getWorldPosition(v1)
         self.mesh.getWorldPosition(v2)
         distance = calculate_distance(v1, v2)
-        if distance > 500 * self.mesh.geometry.boundingSphere.radius:
+        if distance > 100 * self.mesh.geometry.boundingSphere.radius:
             self.sprite.visible = True
             self.mesh.visible = False
         else:
@@ -96,7 +96,12 @@ class Sun(CelestialObject):
             scene, self.RADIUS, 'static/img/sun.jpg',
             material_type='basic', shadow=False)
         # increase sprite size for sun
-        self.sprite.scale.set(0.02, 0.02)
+        self.sprite = three.Sprite(three.SpriteMaterial({
+            'map': three.TextureLoader().load("static/img/sprite_sun.png"),
+            'sizeAttenuation': False}))
+        self.sprite.scale.set(0.08, 0.08)
+        self.sprite.visible = False
+        self.scene.scene.add(self.sprite)
         # add a point light to simulate sun light
         self.point_light = three.PointLight()
         self.scene.scene.add(self.point_light)

@@ -22,9 +22,9 @@ class Satellite:
 
         # create sprite, to be shown instead of mesh when camera is far away
         self.sprite = three.Sprite(three.SpriteMaterial({
-            'map': three.TextureLoader().load("static/img/sprite.png"),
+            'map': three.TextureLoader().load("static/img/sprite_sat.png"),
             'sizeAttenuation': False}))
-        self.sprite.scale.set(0.01, 0.01)
+        self.sprite.scale.set(0.04, 0.04)
         self.sprite.visible = False
         self.scene.scene.add(self.sprite)
 
