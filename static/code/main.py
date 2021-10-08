@@ -47,7 +47,7 @@ def sat_rotation(self, time):
 
 
 #sat.update_orientation_callbacks.append(sat_rotation)
-
+#hello there
 
 """ Animation """
 
