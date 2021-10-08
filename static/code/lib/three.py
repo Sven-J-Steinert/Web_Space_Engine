@@ -23,6 +23,7 @@ SphereGeometry = THREE.SphereGeometry.new
 CubeGeometry = THREE.CubeGeometry.new
 CylinderGeometry = THREE.CylinderGeometry.new
 BufferGeometry = THREE.BufferGeometry.new
+BufferAttribute = THREE.BufferAttribute.new
 Geometry = THREE.Geometry.new
 
 LineBasicMaterial = THREE.LineBasicMaterial.new

@@ -30,7 +30,7 @@ camera.go_to(earth)
 
 # CubeSat http://www.celestrak.com/NORAD/elements/active.txt
 sat = Satellite(
-    scene, model="static/model/seeker.obj", texture="static/img/cluster.png")
+    scene, model="static/model/cluster.obj", texture="static/img/cluster.png")
 sat.set_tle({
     'first_line': '1 44533U 19022K   20085.24091529  .00001920  00000-0  76189-4 0  9997',
     'second_line': '2 44533  51.6417  77.1082 0011268   3.5862 356.5215 15.30556777 29242'})
@@ -46,7 +46,7 @@ def sat_rotation(self, time):
     self.mesh.setRotationFromEuler(e)
 
 
-sat.update_orientation_callbacks.append(sat_rotation)
+#sat.update_orientation_callbacks.append(sat_rotation)
 
 
 """ Animation """
@@ -78,6 +78,18 @@ class Animation:
                 object.update(scene.get_time())
                 object.show_mesh_or_sprite()
                 document['display_time'].text = scene.get_time_str()
+                sat_pos = sat.get_position()
+                if sat_pos != None:
+                    document['value_1'].text = "{0:.2f}".format(sat_pos[0])
+                    document['value_2'].text = "{0:.2f}".format(sat_pos[1])
+                    document['value_3'].text = "{0:.2f}".format(sat_pos[2])
+
+                    if sat_pos[0] > 0:
+                        document['value_4'].text = "Online"
+                        document['value_4'].style.color = "#4AF626"
+                    else:
+                        document['value_4'].text = "Offline"
+                        document['value_4'].style.color = "red"
             scene.tick()
         self.i += 1
         camera.render_scene()
@@ -176,6 +188,11 @@ def btn_change_axes(e):
         axes = input(info).lower()
         if axes in scene.selected_object.axes:
             camera.set_reference_axes(scene.selected_object.axes[axes])
+
+
+@bind(document['btn_show_orbits'], 'click')
+def btn_show_orbits(e):
+    scene.faster()
 
 
 """ Events """

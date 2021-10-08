@@ -19,6 +19,8 @@ class Satellite:
         self.update_position_callbacks = []
         self.update_orientation_callbacks = []
         self.tle = None
+        self.line = None
+        self.pos_rel = None
 
         # create sprite, to be shown instead of mesh when camera is far away
         self.sprite = three.Sprite(three.SpriteMaterial({
@@ -69,6 +71,13 @@ class Satellite:
         self.update_position(time)
         self.update_orientation(time)
 
+    def get_position(self):
+        if self.mesh is None:
+            return 0 # model not fully loaded yet
+        if self.tle:
+            return self.pos_rel
+        return 0
+
     def update_position(self, time):
         if self.tle:
             pos_earth = self.vsop.xyz(js_time(time))
@@ -78,6 +87,11 @@ class Satellite:
             self.mesh.position.z = pos_earth.x * orb.Const.AU + pos_rel.x
             self.mesh.position.x = pos_earth.y * orb.Const.AU + pos_rel.y
             self.mesh.position.y = pos_earth.z * orb.Const.AU + pos_rel.z
+
+            self.pos_rel = [pos_rel.x,pos_rel.y,pos_rel.z]
+
+
+
 
         for callback in self.update_position_callbacks:
             callback(self, time)
