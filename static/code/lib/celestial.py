@@ -11,7 +11,7 @@ class EclipticGrid:
 
     def __init__(self, scene, radius=1):
         self.scene = scene
-        self.grid = three.PolarGridHelper(radius * orb.Const.AU, 16, 8, 64)
+        self.grid = three.PolarGridHelper(radius * orb.Const.AU, 16, 8, 512)
         self.scene.scene.add(self.grid)
 
 

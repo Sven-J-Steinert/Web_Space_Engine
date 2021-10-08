@@ -7,11 +7,15 @@
         <script type="text/javascript" src="{{url_for('static', filename='js/brython_stdlib.js')}}"></script>
         <script type="text/python" src="{{url_for('static', filename='code/main.py')}}"></script>
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+        <style>
+        p    {color: white;}
+        input{float: right;width:200px;background-color:#D0D0D0}
+        </style>
     </head>
 
 
     <body onload="brython({debug:1, pythonpath:['static/code']})" style="background-color:black;overflow: hidden;">
-        <div style="position: fixed;  top: 0;  width: 100%;">
+        <div id="top_bar" style="display: none; position: fixed;  top: 0;  width: 100%;">
 
 
         <div class="btn-group">
@@ -66,33 +70,140 @@
 
     <button id="btn_change_axes" class="btn btn-primary btn-sm">Change Axes</button>
 
-
-
     <div style="float: right;  top: 0;  width: 300px; ">
       <button id="display_time" class="btn btn-primary btn-sm" style="float: right;background-color:black;border-color:white"></button>
       <table class="table table-dark" style="width:100%;margin-top: 100px">
         <tr>
           <th>Relative X</th>
-          <th id="value_1" style="text-align:right" ></th>
+          <th id="relative_x" style="text-align:right" ></th>
         </tr>
         <tr>
           <th>Relative Y</th>
-          <th id="value_2" style="text-align:right" ></th>
+          <th id="relative_y" style="text-align:right" ></th>
         </tr>
         <tr>
           <th>Relative Z</th>
-          <th id="value_3" style="text-align:right" ></th>
+          <th id="relative_z" style="text-align:right" ></th>
+        </tr>
+        <tr>
+          <th>Altitude</th>
+          <th id="altitude" style="text-align:right" ></th>
         </tr>
         <tr>
           <th>Status</th>
-          <th id="value_4" style="text-align:right" ></th>
+          <th id="status" style="text-align:right" ></th>
+        </tr>
+        <tr>
+          <th>Sat Gain [db]</th>
+          <th id="Sat_Gain" style="text-align:right" ></th>
+        </tr>
+        <tr>
+          <th>Sat Power [dbm]</th>
+          <th id="Sat_Power" style="text-align:right" ></th>
+        </tr>
+        <tr>
+          <th>Result</th>
+          <th id="result" style="text-align:right" ></th>
         </tr>
       </table>
     </div>
     </div>
 
+
+    <div id="start_dialog" style="background-color:#303030;position: absolute;top:50%;left:50%;transform: translate(-50%,-50%);">
+      <center>
+      <h1 style="color: white;">Web Space Engine</h1>
+      </center>
+      <div style="background-color:#404040;padding: 20px;">
+
+      <div id="orbit_dropdownMenu" class="btn-group">
+          <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Orbit</button>
+          <div class="dropdown-menu" aria-labelledby="dropdownMenu">
+              <button id="orbit_0" class="dropdown-item" type="button">LEO</button>
+              <button id="orbit_1" class="dropdown-item" type="button">ISS</button>
+          </div>
+          <button id="display_orbit" class="btn btn-primary btn-sm" style="background-color:#303030;border-color:white;width:80px"></button>
+      </div>
+      <p style="float:right;color:gray;font-size: 11px;">or enter Two-line element set (TLE)</p>
+      <br>
+      <textarea id="tle_orbit" style="background-color:#686868;margin-top: 0px;font-size: 10px;border:1px solid #686868;color:#C0C0C0;width:100%" cols="61" rows="1"></textarea>
+      <br>
+
+      <div class="btn-group" style="margin-top: 10px">
+          <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Band</button>
+          <div class="dropdown-menu" aria-labelledby="dropdownMenu">
+              <button id="select_UHF" class="dropdown-item" type="button">UHF</button>
+              <button id="select_L" class="dropdown-item" type="button">L</button>
+              <button id="select_S" class="dropdown-item" type="button">S</button>
+              <button id="select_SGLS" class="dropdown-item" type="button">SGLS</button>
+              <button id="select_C" class="dropdown-item" type="button">C</button>
+              <button id="select_X" class="dropdown-item" type="button">X</button>
+              <button id="select_Ku" class="dropdown-item" type="button">Ku</button>
+              <button id="select_K" class="dropdown-item" type="button">K</button>
+              <button id="select_Ka" class="dropdown-item" type="button">Ka</button>
+          </div>
+          <button id="display_band" class="btn btn-primary btn-sm" style="background-color:#303030;border-color:white; width:50px"></button>
+      </div>
+
+      <div id="groundstation_dropdownMenu" style="margin-left: 10px;margin-top: 10px" class="btn-group">
+          <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Groundstation</button>
+          <div class="dropdown-menu" aria-labelledby="dropdownMenu">
+              <button id="groundstation_0" style="display: none" class="dropdown-item" type="button"></button>
+              <button id="groundstation_1" style="display: none" class="dropdown-item" type="button"></button>
+              <button id="groundstation_2" style="display: none" class="dropdown-item" type="button"></button>
+              <button id="groundstation_3" style="display: none" class="dropdown-item" type="button"></button>
+              <button id="groundstation_4" style="display: none" class="dropdown-item" type="button"></button>
+              <button id="groundstation_5" style="display: none" class="dropdown-item" type="button"></button>
+              <button id="groundstation_6" style="display: none" class="dropdown-item" type="button"></button>
+              <button id="groundstation_7" style="display: none" class="dropdown-item" type="button"></button>
+              <button id="groundstation_8" style="display: none" class="dropdown-item" type="button"></button>
+              <button id="groundstation_9" style="display: none" class="dropdown-item" type="button"></button>
+              <button id="groundstation_10" style="display: none" class="dropdown-item" type="button"></button>
+              <button id="groundstation_11" style="display: none" class="dropdown-item" type="button"></button>
+              <button id="groundstation_12" style="display: none" class="dropdown-item" type="button"></button>
+              <button id="groundstation_13" style="display: none" class="dropdown-item" type="button"></button>
+              <button id="groundstation_14" style="display: none" class="dropdown-item" type="button"></button>
+              <button id="groundstation_15" style="display: none" class="dropdown-item" type="button"></button>
+              <button id="groundstation_16" style="display: none" class="dropdown-item" type="button"></button>
+              <button id="groundstation_17" style="display: none" class="dropdown-item" type="button"></button>
+              <button id="groundstation_18" style="display: none" class="dropdown-item" type="button"></button>
+              <button id="groundstation_19" style="display: none" class="dropdown-item" type="button"></button>
+              <button id="groundstation_20" style="display: none" class="dropdown-item" type="button"></button>
+              <button id="groundstation_21" style="display: none" class="dropdown-item" type="button"></button>
+              <button id="groundstation_22" style="display: none" class="dropdown-item" type="button"></button>
+          </div>
+          <button id="display_groundstation" class="btn btn-primary btn-sm" style="background-color:#303030;border-color:white;width:105px"></button>
+      </div>
+      <br>
+      <p style="margin-top: 10px">DataRate<input id="entry" placeholder="kbps"></p>
+      <select name="cars" id="polarization">
+        <option value="L">L</option>
+        <option value="R">R</option>
+        <option value="C">C</option>
+      </select>
+      <p style="margin-top: 10px;display: inline">Polarization<input id="entry" placeholder="loss in dB"></p>
+      <p style="margin-top: 10px">EIRP<input id="entry"  placeholder="loss in db" ></p>
+      <p style="margin-top: 10px">G/T<input id="entry" placeholder="Unit"></p>
+      <p style="margin-top: 10px">Lpoint<input id="entry" placeholder="Unit"></p>
+      <p style="margin-top: 10px">Lmod_demod<input id="entry" placeholder="Unit"></p>
+      <p style="margin-top: 10px">Frequency<input id="entry" placeholder="GHz"></p>
+      <p style="margin-top: 10px">d<input id="entry" placeholder="Unit"></p>
+
+      <br>
+      <button id="compute" style="margin-top: 20px;margin-left: 140px" class="btn btn-primary btn-sm" type="button">Compute</button>
+      <button id="run" style="margin-top: 20px;margin-left: 10px" class="btn btn-primary btn-sm" type="button">Run Simulation</button>
+
+    </div>
+    </div>
+
+
+
     <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
   </body>
 </html>

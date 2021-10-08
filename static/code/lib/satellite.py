@@ -8,7 +8,7 @@ class Satellite:
 
     def __init__(
             self, scene, mesh=None, model=None, texture=None,
-            scale=1, shadow=True):
+            scale=0.1, shadow=True):
         self.scene = scene
         self.mesh = mesh
         self.model = model
@@ -88,8 +88,8 @@ class Satellite:
             self.mesh.position.x = pos_earth.y * orb.Const.AU + pos_rel.y
             self.mesh.position.y = pos_earth.z * orb.Const.AU + pos_rel.z
 
-            self.pos_rel = [pos_rel.x,pos_rel.y,pos_rel.z]
-
+            #self.pos_rel = [pos_rel.x,pos_rel.y,pos_rel.z]
+            self.pos_rel = [pos_tle.x,pos_tle.y,pos_tle.z]
 
 
 
