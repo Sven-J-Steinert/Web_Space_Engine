@@ -1,4 +1,4 @@
-# python-webview3d
+# Web Space Engine
 
 This is a prototype for a web application for 3D visualization of the solar
 system and satellites in your browser.
