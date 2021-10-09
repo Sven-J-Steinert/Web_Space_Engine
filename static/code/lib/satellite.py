@@ -2,7 +2,7 @@ from . import three
 from . import orb
 from .axes import Axes, BODY_FIXED, ECLIPTIC
 from .utils import js_time, calculate_distance, assign_xyz_vector
-
+import math
 
 class Satellite:
 
@@ -78,6 +78,21 @@ class Satellite:
             return self.pos_rel
         return 0
 
+
+    def get_position_earth(self):
+        if self.mesh is None:
+            return 0 # model not fully loaded yet
+        if self.tle:
+            return self.pos_earth
+        return 0
+
+    #def get_position_offset(self):
+    #    if self.mesh is None:
+    #        return 0 # model not fully loaded yet
+    #    if self.tle:
+    #        return self.pos_offset
+    #    return 0
+
     def update_position(self, time):
         if self.tle:
             pos_earth = self.vsop.xyz(js_time(time))
@@ -90,7 +105,11 @@ class Satellite:
 
             #self.pos_rel = [pos_rel.x,pos_rel.y,pos_rel.z]
             self.pos_rel = [pos_tle.x,pos_tle.y,pos_tle.z]
+            self.pos_earth = pos_earth
 
+            #delta = pos_tle - pos_rel
+            #norm = math.sqrt(delta.x**2 + delta.y**2 + delta.z**2)
+            #self.pos_offset = delta / norm
 
 
         for callback in self.update_position_callbacks:

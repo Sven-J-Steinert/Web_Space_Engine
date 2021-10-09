@@ -9,7 +9,8 @@
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
         <style>
         p    {color: white;}
-        input{float: right;width:200px;background-color:#D0D0D0}
+        span    {color: white;}
+        input{float: right;width:180px;background-color:#D0D0D0;text-align: right}
         </style>
     </head>
 
@@ -94,16 +95,12 @@
           <th id="status" style="text-align:right" ></th>
         </tr>
         <tr>
-          <th>Sat Gain [db]</th>
-          <th id="Sat_Gain" style="text-align:right" ></th>
+          <th>Groundstation</th>
+          <th id="Groundstation_selected" style="text-align:right" ></th>
         </tr>
         <tr>
-          <th>Sat Power [dbm]</th>
-          <th id="Sat_Power" style="text-align:right" ></th>
-        </tr>
-        <tr>
-          <th>Result</th>
-          <th id="result" style="text-align:right" ></th>
+          <th>Lat Lon</th>
+          <th id="lat_lon" style="text-align:right" ></th>
         </tr>
       </table>
     </div>
@@ -112,7 +109,7 @@
 
     <div id="start_dialog" style="background-color:#303030;position: absolute;top:50%;left:50%;transform: translate(-50%,-50%);">
       <center>
-      <h1 style="color: white;">Web Space Engine</h1>
+      <h1 id="title" style="color: white;">Web Space Engine</h1>
       </center>
       <div style="background-color:#404040;padding: 20px;">
 
@@ -122,6 +119,7 @@
           <div class="dropdown-menu" aria-labelledby="dropdownMenu">
               <button id="orbit_0" class="dropdown-item" type="button">LEO</button>
               <button id="orbit_1" class="dropdown-item" type="button">ISS</button>
+              <button id="orbit_2" class="dropdown-item" type="button">Hubble</button>
           </div>
           <button id="display_orbit" class="btn btn-primary btn-sm" style="background-color:#303030;border-color:white;width:80px"></button>
       </div>
@@ -174,27 +172,70 @@
               <button id="groundstation_20" style="display: none" class="dropdown-item" type="button"></button>
               <button id="groundstation_21" style="display: none" class="dropdown-item" type="button"></button>
               <button id="groundstation_22" style="display: none" class="dropdown-item" type="button"></button>
+              <button id="groundstation_23" style="display: none" class="dropdown-item" type="button"></button>
           </div>
           <button id="display_groundstation" class="btn btn-primary btn-sm" style="background-color:#303030;border-color:white;width:105px"></button>
       </div>
       <br>
-      <p style="margin-top: 10px">DataRate<input id="entry" placeholder="kbps"></p>
-      <select name="cars" id="polarization">
+      <div style="margin-top: 10px">
+      <p style="display: inline">Data Rate
+      <div style="float: right;display: inline">
+        <input style="width: 80px" id="data_rate" placeholder="kbps">
+      </div>
+      <div style="float: right;display: inline;margin-right:5px">
+
+        <div id="orbit_dropdownMenu" class="btn-group">
+            <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="up_down" style="width:95px" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Up / Down</button>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenu">
+                <button id="uplink" class="dropdown-item" type="button">Uplink</button>
+                <button id="downlink" class="dropdown-item" type="button">Downlink</button>
+            </div>
+        </div>
+
+      </div>
+      </p>
+    </div>
+      <select id="L_R_C">
         <option value="L">L</option>
         <option value="R">R</option>
         <option value="C">C</option>
       </select>
-      <p style="margin-top: 10px;display: inline">Polarization<input id="entry" placeholder="loss in dB"></p>
-      <p style="margin-top: 10px">EIRP<input id="entry"  placeholder="loss in db" ></p>
-      <p style="margin-top: 10px">G/T<input id="entry" placeholder="Unit"></p>
-      <p style="margin-top: 10px">Lpoint<input id="entry" placeholder="Unit"></p>
-      <p style="margin-top: 10px">Lmod_demod<input id="entry" placeholder="Unit"></p>
-      <p style="margin-top: 10px">Frequency<input id="entry" placeholder="GHz"></p>
-      <p style="margin-top: 10px">d<input id="entry" placeholder="Unit"></p>
-
+      <p style="margin-top: 10px;display: inline">Polarization<input id="Polarization" placeholder="loss in dB"></p>
+      <p style="margin-top: 10px">EIRP<input id="EIRP"  placeholder="loss in db" ></p>
+      <span id="G_T_label" style="margin-top: 10px">G/T</span><input id="G_T" placeholder="Unit">
       <br>
-      <button id="compute" style="margin-top: 20px;margin-left: 140px" class="btn btn-primary btn-sm" type="button">Compute</button>
-      <button id="run" style="margin-top: 20px;margin-left: 10px" class="btn btn-primary btn-sm" type="button">Run Simulation</button>
+      <div style="margin-top: 15px">
+      <span id="Lpoint_label" >pointing Loss</span><input id="Lpoint" placeholder="Unit">
+      </div>
+      <div style="margin-top: 15px">
+      <span id="Lmod_demod_label" >Mod-Demod Loss</span><input id="Lmod_demod" placeholder="Unit">
+      </div>
+      <p style="margin-top: 15px">Frequency<input id="Frequency" placeholder="GHz"></p>
+      <p style="margin-top: 10px">Slant range<input id="d" placeholder="Unit"></p>
+
+      </div>
+      <p align="center" id="WARNING" style="display: none;color: white">missing values</p>
+      <div id="result_container" style="display: none;background-color:#696969;padding: 20px;">
+      <div>
+      <p style="display: inline">Achieved C/N0</p><div style="float: right;display: inline"><p id="result_C_N0_info" style="margin-left:10px;width:90px;text-align:right">dB Hz</p></div><input id="result_C_N0" style="width: 100px;display: inline;float:right" placeholder="Unit">
+      </div>
+      <div style="margin-top: 18px">
+      <p style="display: inline">Achieved Eb/N0</p><div style="float: right;display: inline"><p id="result_Eb_N0_info" style="margin-left:10px;width:90px;text-align:right">dB</p></div><input id="result_Eb_N0" style="width: 100px;display: inline;float:right" placeholder="Unit">
+      </div>
+      <div style="margin-top: 18px">
+      <p style="display: inline">LinkMargin</p><div style="float: right;display: inline"><p id="result_LinkMargin_info" style="margin-left:10px;width:90px;text-align:right">Info</p></div><input id="result_LinkMargin" style="width: 100px;display: inline;float:right" placeholder="Unit">
+      </div>
+      <div style="margin-top: 18px">
+      <p style="display: inline;">max freq instability <br> allowed for SCTx </p><div style="float: right;display: inline;"><p style="margin-left:10px;width:90px;text-align:right">MHz<br><small style="font-size:10px">ECSS-E-ST-50-05C</small></p></div><input style="width: 100px;display: inline;float:right" placeholder="Unit" value="2*10⁻⁵">
+      <br><br>
+      <p id="deepspace" style="font-size: 13px;display: none;color: white;margin-top:20px">Ground station type: In vicinity of a <b>deep space</b> antenna site. <br> Powerflux Spectral Density threshold: -257 dBW/m²/Hz</p>
+      </div>
+      </div>
+
+      <div style="background-color:#383838">
+      <button id="compute" style="margin-bottom: 10px;margin-top: 10px;margin-left: 180px" class="btn btn-primary btn-sm" type="button">Compute</button>
+      <button id="run" style="margin-bottom: 10px;margin-top: 10px;margin-left: 10px" class="btn btn-primary btn-sm" type="button">Run Simulation</button>
 
     </div>
     </div>

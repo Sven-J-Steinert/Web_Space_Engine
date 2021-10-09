@@ -14,12 +14,19 @@ from lib.customer import Customer
 import math
 from lib import orb
 
+# DEBUGGING
+#document['title'].text = "1"
+
+camera_item = None
+groundstation_selected = None
+
 def setup_run():
-    global scene, camera, sat
+    global scene, camera,camera_item, sat
+    global sun, earth, moon, mercury, venus, mars, jupiter
     scene = scene.Scene()
     scene.scene.add(three.AmbientLight(0x404040, 0.5))
 
-    camera = camera.Camera(scene)
+    camera_item = camera.Camera(scene)
 
     # ecliptic grid
     ecliptic_grid = EclipticGrid(scene)
@@ -33,16 +40,43 @@ def setup_run():
     mars = Mars(scene)
     jupiter = Jupiter(scene)
 
-    camera.go_to(earth)
+    camera_item.go_to(earth)
 
     # CubeSat http://www.celestrak.com/NORAD/elements/active.txt
     sat = Satellite(
         scene, model="static/model/cluster.obj", texture="static/img/cluster.png")
-    sat.set_tle({
-        'first_line': '1 44533U 19022K   20085.24091529  .00001920  00000-0  76189-4 0  9997',
-        'second_line': '2 44533  51.6417  77.1082 0011268   3.5862 356.5215 15.30556777 29242'})
+
+    #first_line, second_line = document['tle_orbit'].value.split('\n')
+    first_line = document['tle_orbit'].value.split('\n')[0]
+    second_line = document['tle_orbit'].value.split('\n')[1]
+    sat_orbit = Orbit(first_line,second_line)
+    sat.set_tle(sat_orbit.json)
+    #sat.set_tle({
+    #    'first_line': '1 44533U 19022K   20085.24091529  .00001920  00000-0  76189-4 0  9997',
+    #    'second_line': '2 44533  51.6417  77.1082 0011268   3.5862 356.5215 15.30556777 29242'})
+
+    camera_item.set_reference_axes(scene.selected_object.axes['ecliptic'])
 
 
+
+def convert_lat_lon(lat,lon):
+    # make up for shifted axis
+    #lat = lat + 90
+    #lon = lon + 90
+
+    # convert ° to rad
+    lat_rad = math.radians(lat)
+    lon_rad = math.radians(lon)
+
+    x = math.sin(math.pi/2-lat_rad) * math.cos(lon_rad)
+    y = math.sin(math.pi/2-lat_rad) * math.sin(lon_rad)
+    z = math.cos(math.pi/2-lat_rad)
+
+    x = x * (orb.Const.Earth.radius + 10)
+    y = y * (orb.Const.Earth.radius + 10)
+    z = z * (orb.Const.Earth.radius + 10)
+
+    return [x,y,z]
 
 """ Animation """
 
@@ -53,6 +87,12 @@ class Animation:
         self.handle = None
         self.last_time = datetime.utcnow()
         self.i = 0
+
+        self.gs_sprite = three.Sprite(three.SpriteMaterial({
+            'map': three.TextureLoader().load("static/img/sprite_sat.png"),
+            'sizeAttenuation': False}))
+        self.gs_sprite.scale.set(0.06, 0.06)
+        scene.scene.add(self.gs_sprite)
 
     def run(self):
         if not self.running:
@@ -83,7 +123,26 @@ class Animation:
                     altitude = vector_norm(sat_pos) - orb.Const.Earth.radius
                     document['altitude'].text = "{0:.2f}".format(altitude)
 
+                    # display groundstation
+                    document['Groundstation_selected'].text =  gs_list[groundstation_selected].name + " ["+ gs_list[groundstation_selected].id +"]"
+
+                    rel_gs_x, rel_gs_y, rel_gs_z = convert_lat_lon(gs_list[groundstation_selected].Lat, gs_list[groundstation_selected].Lon)
+
+                    gs_pos_rel = orb.EquatorialToEcliptic({"equatorial": {
+                       'x': rel_gs_x, 'y': rel_gs_y, 'z': rel_gs_z}})
+
+                    pos_earth = sat.get_position_earth()
+
+                    abs_gs_z = pos_earth.x * orb.Const.AU + gs_pos_rel.x
+                    abs_gs_x = pos_earth.y * orb.Const.AU + gs_pos_rel.y
+                    abs_gs_y = pos_earth.z * orb.Const.AU + gs_pos_rel.z
+
+                    self.gs_sprite.position.set( abs_gs_x, abs_gs_y, abs_gs_z);
+
+                    document['lat_lon'].text = [gs_list[groundstation_selected].Lat, gs_list[groundstation_selected].Lon]
+
                     # ground station coverage checking
+
                     # Placeholder
                     if sat_pos[0] > 0 and sat_pos[1] > 0 and sat_pos[2] > 0:
                         document['status'].text = "Online"
@@ -92,10 +151,8 @@ class Animation:
                         document['status'].text = "Offline"
                         document['status'].style.color = "red"
             scene.tick()
-            document['Sat_Gain'].text = "a"
         self.i += 1
-        camera.render_scene()
-        document['Sat_Gain'].text = "b"
+        camera_item.render_scene()
 
 
 # define a callback for updating satellite orientation
@@ -110,7 +167,9 @@ def sat_rotation(self, time):
 
 #sat.update_orientation_callbacks.append(sat_rotation)
 
-def linkbudget(customer):
+def calculation(customer):
+    global math
+
     EIRP = customer.EIRP            #Effective Isotropic Radiated Power
     LPolarization = customer.LPolarization  #Polarization Loss
     G_T = customer.G_T              #Gain Rx over Temperature System
@@ -120,8 +179,10 @@ def linkbudget(customer):
     f = customer.f
     d = customer.d
 
-    FLS = -(20 * math.log10(f*d) + 92.45 )# you need the math library or so for that
+    # convert to dB
+    DataRate = 10* math.log10(DataRate*1000)
 
+    FLS = -(20 * math.log10(f*d) + 92.45 )# you need the math library or so for that
     #FIXED VALUES FOR THIS EXAMPLE
     Lrain = -0.04
     Lat = -0.22
@@ -130,32 +191,74 @@ def linkbudget(customer):
     Required = 13.5
 
     Lp = FLS + Lrain + Lat + LPolarization + Lscin
+
     Achived_CNo = G_T + EIRP + k + Lp + Lpoint + Lmod_demod
     Achived_EB = Achived_CNo - DataRate
     LinkMargin = Achived_EB - Required
 
-    return LinkMargin
+    return [Achived_CNo, Achived_EB, LinkMargin]
 
-# initialize values for calculation
-Sat_Gain = Sat_Power = altitude = 0
 
 def main_calculation():
-    if Sat_Gain == None or Sat_Power == None or altitude == None:
-        document['result'].text = "missing values"
+
+    EIRP = document['EIRP'].value
+    LPolarization= document['Polarization'].value
+    G_T= document['G_T'].value
+    DataRate= document['data_rate'].value
+    Lpoint= document['Lpoint'].value
+    Lmod_demod= document['Lmod_demod'].value
+    f = document['Frequency'].value
+    d = document['d'].value
+
+
+    if EIRP == "" or LPolarization == "" or G_T == "" or DataRate == "" or Lpoint == "" or Lmod_demod == "" or f == "" or  d == "":
+        document['WARNING'].style.display = "block"
     else:
-        # placeholder calculation
+        document['WARNING'].style.display = "none"
         customer = Customer(
-            EIRP = 60,
-            LPolarization= 2.3,
-            G_T= -37.99,
-            DataRate= 48.06,
-            Lpoint= -0.5,
-            Lmod_demod= -1,
-            f = 2.028, # Frequency GHz
-            d = 2045.53 # highest distance between sat and gs
+            EIRP = EIRP,
+            LPolarization= LPolarization,
+            G_T= G_T,
+            DataRate= DataRate,
+            Lpoint= Lpoint,
+            Lmod_demod= Lmod_demod,
+            f = f,
+            d = d
             )
-        result = linkbudget(customer)
-        document['result'].text = "{0:.2f}".format(result)
+
+        # verification
+        # customer = Customer(
+        #     EIRP = 60,
+        #     LPolarization= 2.3,
+        #     G_T= -37.99,
+        #     DataRate= 48.06,
+        #     Lpoint= -0.5,
+        #     Lmod_demod= -1,
+        #     f = 2.028, # Frequency GHz
+        #     d = 2045.53 # highest distance between sat and gs
+        #     )
+
+        # expected Result -> 24.40
+
+        #if document['up_down'].text == "Uplink":
+        #    result = uplink_calculation(customer)
+
+        #if document['up_down'].text == "Downlink":
+        #    result = downlink_calculation(customer)
+
+        result = calculation(customer)
+
+        document['result_container'].style.display = "block"
+        document['result_C_N0'].value = "{0:.2f}".format(result[0])
+        document['result_Eb_N0'].value = "{0:.2f}".format(result[1])
+        document['result_LinkMargin'].value = "{0:.2f}".format(result[2])
+
+        if result[2] >= 3:
+            document['result_LinkMargin_info'].style.color = "#4AF626"
+            document['result_LinkMargin_info'].text = ">3 dB ECSS"
+        else:
+            document['result_LinkMargin_info'].style.color = "red"
+            document['result_LinkMargin_info'].text = "<3 dB ECSS"
 
 
 def vector_norm(x):
@@ -165,12 +268,19 @@ def vector_norm(x):
 """ Actions """
 
 @bind(document['run'], 'click')
-def btn_compute(e):
-    setup_run()
-    run_simulation()
+def btn_run(e):
+    if document['display_groundstation'].text != "" and document['tle_orbit'].value != "":
+        document['WARNING'].style.display = "none"
+        setup_run()
+        run_simulation()
+    else:
+        document['WARNING'].style.display = "block"
+
 
 @bind(document['compute'], 'click')
 def btn_compute(e):
+    if document['display_groundstation'].text == "Goldstone":
+        document['deepspace'].style.display = "Block"
     main_calculation()
 
 
@@ -219,51 +329,52 @@ def btn_time_set(e):
 
 @bind(document['btn_goto_sun'], 'click')
 def btn_goto_sun(e):
-    camera.go_to(sun)
+    camera_item.go_to(sun)
 
 
 @bind(document['btn_goto_mercury'], 'click')
 def btn_goto_mercury(e):
-    camera.go_to(mercury)
+    camera_item.go_to(mercury)
 
 
 @bind(document['btn_goto_venus'], 'click')
 def btn_goto_venus(e):
-    camera.go_to(venus)
+    camera_item.go_to(venus)
 
 
 @bind(document['btn_goto_earth'], 'click')
 def btn_goto_earth(e):
-    camera.go_to(earth)
+    camera_item.go_to(earth)
 
 
 @bind(document['btn_goto_moon'], 'click')
 def btn_goto_moon(e):
-    camera.go_to(moon)
+    camera_item.go_to(moon)
 
 
 @bind(document['btn_goto_mars'], 'click')
 def btn_goto_mars(e):
-    camera.go_to(mars)
+    camera_item.go_to(mars)
 
 
 @bind(document['btn_goto_jupiter'], 'click')
 def btn_goto_jupiter(e):
-    camera.go_to(jupiter)
+    camera_item.go_to(jupiter)
 
 
 @bind(document['btn_goto_sat'], 'click')
 def btn_goto_sat(e):
-    camera.go_to(sat)
+    camera_item.go_to(sat)
 
 
 @bind(document['btn_change_axes'], 'click')
 def btn_change_axes(e):
+    global camera_item
     if scene.selected_object:
         info = '\n'.join(scene.selected_object.axes.keys())
         axes = input(info).lower()
         if axes in scene.selected_object.axes:
-            camera.set_reference_axes(scene.selected_object.axes[axes])
+            camera_item.set_reference_axes(scene.selected_object.axes[axes])
 
 def show_groundstations(band_number):
     for i in range(len(gs_list)):
@@ -321,6 +432,23 @@ def btn_show_Ka(e):
     document['display_band'].text = "Ka"
     show_groundstations(9) # band_index
 
+@bind(document['uplink'], 'click')
+def btn_show_up(e):
+    document['up_down'].text = "Uplink"
+    document['G_T_label'].textContent = "Spacecraft G/T"
+    document['Lpoint_label'].textContent = "Tx Pointing Loss"
+    document['Lmod_demod_label'].textContent = "Rx Mod-Demod Loss"
+
+
+
+@bind(document['downlink'], 'click')
+def btn_show_down(e):
+    document['up_down'].text = "Downlink"
+    document['G_T_label'].textContent = "Groundstation G/T"
+    document['Lpoint_label'].textContent = "Rx Pointing Loss"
+    document['Lmod_demod_label'].textContent = "Tx Mod-Demod Loss"
+
+
 # Groundstation Database
 gs_list = []
 
@@ -347,12 +475,18 @@ gs_list.append(Groundstation(id='FBA',name='Fairbanks',bands=[False,False,True,F
 gs_list.append(Groundstation(id='DUB',name='Dubai',bands=[False,False,True,False,False,True,False,False,False],Lat=25.20,Lon=55.27,altitude=0))
 gs_list.append(Groundstation(id='HAR2',name='Hartebeesthoek',bands=[False,False,True,False,False,True,False,False,False],Lat=-25.64,Lon=28.08,altitude=1288))
 gs_list.append(Groundstation(id='INU2',name='Inuvik',bands=[False,False,True,False,False,True,False,False,False],Lat=68.40,Lon=-133.50,altitude=51))
+gs_list.append(Groundstation(id='DNS',name='Goldstone',bands=[False,False,True,False,False,True,False,False,True],Lat=35.43,Lon=116.89,altitude=900))
+
+# 1     2   3    4    5   6    7  8   9
+# UHF, L ,  S , SGLS, C , X , Ku, K, Ka
 
 # map all functions to select groundstation
 def addfunc(n):
     @bind(document['groundstation_'+str(n)], 'click')
     def addn(e):
+        global groundstation_selected
         document['display_groundstation'].text = gs_list[n].name
+        groundstation_selected = n
     return addn
 
 for i in range(len(gs_list)):
@@ -365,7 +499,8 @@ antenna_list.append(Antenna(id='ESR_A',Gain = 12,Power = 7))
 antenna_list.append(Antenna(id = 'Sat_A',Gain = 500,Power = 100))
 
 class Orbit():
-    def __init__(self,first_line,second_line):
+    def __init__(self,first_line,second_line,name=None):
+        self.name = name
         self.first_line = first_line
         self.second_line = second_line
         self.json = {'first_line': self.first_line,
@@ -373,24 +508,30 @@ class Orbit():
         self.text = self.first_line + '\n' + self.second_line
 
 orbit_list = []
-orbit_list.append( Orbit('1 44533U 19022K   20085.24091529  .00001920  00000-0  76189-4 0  9997','2 44533  51.6417  77.1082 0011268   3.5862 356.5215 15.30556777 29242') )
-orbit_list.append( Orbit('1 25544U 98067A   06040.85138889  .00012260  00000-0  86027-4 0  3194','2 25544  51.6448 122.3522 0008835 257.3473 251.7436 15.74622749413094') )   # ISS
 
-@bind(document['orbit_0'], 'click')
-def load_orbit_0(e):
-    document['display_orbit'].text = "LEO"
-    document['tle_orbit'].value = orbit_list[0].text
 
-@bind(document['orbit_1'], 'click')
-def load_orbit_1(e):
-    document['display_orbit'].text = "ISS"
-    document['tle_orbit'].value = orbit_list[1].text
+orbit_list.append( Orbit('1 44533U 19022K   20085.24091529  .00001920  00000-0  76189-4 0  9997','2 44533  51.6417  77.1082 0011268   3.5862 356.5215 15.30556777 29242','LEO') )   # LEO
+orbit_list.append( Orbit('1 25544U 98067A   21281.73004796  .00003128  00000-0  65029-4 0  9990','2 25544  51.6444 141.3023 0004210  71.7185  11.5978 15.48952913306193','ISS') )   # ISS (ZARYA)
+orbit_list.append( Orbit('1 20580U 90037B   21281.76424799  .00001000  00000-0  49416-4 0  9995','2 20580  28.4708  35.2711 0002511 198.5590 289.2049 15.09769068528135','Hubble') )   # Hubble
+
+# map all functions to select groundstation
+def addfunc_orbit(n):
+    @bind(document['orbit_'+str(n)], 'click')
+    def addn2(e):
+        document['display_orbit'].text = orbit_list[n].name
+        document['tle_orbit'].value = orbit_list[n].text
+    return addn2
+
+for i in range(len(orbit_list)):
+    globals()['add{}'.format(i)] = addfunc_orbit(i)
+
+
 
 """ Events """
 
 
 def on_resize(e):
-    camera.window_resize()
+    camera_item.window_resize()
 
 
 
